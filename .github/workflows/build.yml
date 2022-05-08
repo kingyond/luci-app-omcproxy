@@ -22,9 +22,9 @@ jobs:
 
       - name: Set env
         run: |
-          mkdir ../luci-app-omcproxy
+          mkdir ../luci-app-omcproxy-tmp
           cp -rf ./* ../luci-app-omcproxy
-          mv ../luci-app-omcproxy ./
+          mv ../luci-app-omcproxy-tmp ./luci-app-omcproxy
           COMMIT=`(printf "commit %s\0" $(git cat-file commit HEAD | wc -c); git cat-file commit HEAD) | sha1sum | cut -c1-8`
           echo "COMMIT=$COMMIT" >> $GITHUB_ENV
 
