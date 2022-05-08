@@ -22,11 +22,12 @@ jobs:
 
       - name: Set env
         run: |
-          mkdir ../luci-app-omcproxy-tmp
-          cp -rf ./* ../luci-app-omcproxy
-          mv ../luci-app-omcproxy-tmp ./luci-app-omcproxy
+          mkdir ../tmp
+          cp -rf ./* ../tmp
+          mv ../tmp ./luci-app-omcproxy
           COMMIT=`(printf "commit %s\0" $(git cat-file commit HEAD | wc -c); git cat-file commit HEAD) | sha1sum | cut -c1-8`
           echo "COMMIT=$COMMIT" >> $GITHUB_ENV
+          ls -R ./
 
       - name: Build
         uses: kingyond/gh-action-sdk@master
