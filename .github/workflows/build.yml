@@ -42,7 +42,7 @@ jobs:
           echo "DEVICE_PLATFORM=x86_64" >> $GITHUB_ENV
           echo "DEVICE_TARGET=x86" >> $GITHUB_ENV
           echo "DEVICE_SUBTARGET=64" >> $GITHUB_ENV
-          echo "TARGET_INFO=immortalwrt-immortalwrt-openwrt-18.06-k5.4-x86-64" >> $GITHUB_ENV
+          echo "TARGET_INFO=immortalwrt-immortalwrt-openwrt-18.06-k5.4-x86-generic" >> $GITHUB_ENV
 
       - name: Prepare Toolchain Image
         run: |
@@ -52,7 +52,7 @@ jobs:
           do
             curl -fsL https://github.com/SuLingGG/OpenWrt-Buildbot/releases/download/$TOOLCHAIN_TAG/toolchain-${TARGET_INFO}.img.0$i >> toolchain-${TARGET_INFO}.img || break
           done
-          ls -h
+          ls -R ./
           mkdir -p openwrt-ro openwrt workdir overlay
           sudo mount -o loop toolchain-${TARGET_INFO}.img openwrt-ro
           sudo mount -t overlay overlay -o lowerdir=openwrt-ro,upperdir=overlay,workdir=workdir openwrt
