@@ -52,8 +52,8 @@ jobs:
           do
             curl -fsL https://github.com/SuLingGG/OpenWrt-Buildbot/releases/download/$TOOLCHAIN_TAG/toolchain-${TARGET_INFO}.img.0$i >> toolchain-${TARGET_INFO}.img || break
           done
-          ls -R ./
           mkdir -p openwrt-ro openwrt workdir overlay
+          ls -lh ./
           sudo mount -o loop toolchain-${TARGET_INFO}.img openwrt-ro
           sudo mount -t overlay overlay -o lowerdir=openwrt-ro,upperdir=overlay,workdir=workdir openwrt
           sudo chown runner:runner openwrt
