@@ -29,13 +29,74 @@ jobs:
           echo "COMMIT=$COMMIT" >> $GITHUB_ENV
           ls -R ./
 
-      - name: Build
-        uses: kingyond/gh-action-sdk@master
-        env:
-          ARCH: ${{ matrix.arch }}
-          PACKAGES: luci-app-omcproxy
-          CUSTOM_PKG_DIR: luci-app-omcproxy
-          CUSTOM_SRC_DIR: luci-app-omcproxy
+      - name: Clean Environment
+        run: |
+          sudo umount /dev/loop*p1 || true
+          sudo losetup -D || true
+          sudo umount overlay || true
+          sudo rm -rf workspace || true
+
+      - name: Generate Variables
+        id: env
+        run: |
+          echo "DEVICE_PLATFORM=x86_64" >> $GITHUB_ENV
+          echo "DEVICE_TARGET=x86" >> $GITHUB_ENV
+          echo "DEVICE_SUBTARGET=64" >> $GITHUB_ENV
+          echo "TARGET_INFO=immortalwrt-immortalwrt-openwrt-18.06-k5.4-x86-64" >> $GITHUB_ENV
+
+      - name: Prepare Toolchain Image
+        run: |
+          mkdir -p workspace
+          cd workspace
+          for i in {0..9}
+          do
+            curl -fsL https://github.com/$GITHUB_REPOSITORY/releases/download/$TOOLCHAIN_TAG/toolchain-${TARGET_INFO}.img.0$i >> toolchain-${TARGET_INFO}.img || break
+          done
+          mkdir -p openwrt-ro openwrt workdir overlay
+          sudo mount -o loop toolchain-${TARGET_INFO}.img openwrt-ro
+          sudo mount -t overlay overlay -o lowerdir=openwrt-ro,upperdir=overlay,workdir=workdir openwrt
+          sudo chown runner:runner openwrt
+          cd openwrt
+          echo "OPENWRT_ROOT_PATH=$PWD" >> $GITHUB_ENV
+          git pull
+
+      - name: Install Feeds
+        run: |
+          cd $OPENWRT_ROOT_PATH
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: Generate Config File
+        run: |
+          cd $OPENWRT_ROOT_PATH
+          echo CONFIG_TARGET_${DEVICE_TARGET}=y > .config
+          echo CONFIG_TARGET_${DEVICE_TARGET}_${DEVICE_SUBTARGET}=y >> .config
+          cat $GITHUB_WORKSPACE/config/packages.config >> .config
+          echo -e "\n---- Original Config Start ----\n"
+          cat .config
+          echo -e "\n---- Original Config End ----\n"
+          make defconfig
+          echo -e "\n---- Whole Config Start ----\n"
+          cat .config
+          echo -e "\n---- Whole Config End ----\n"
+
+      - name: Download Source Packages
+        run: |
+          cd $OPENWRT_ROOT_PATH
+          cp -rf /data/cache/dl .
+          make download -j64
+
+      - name: Add package
+        run: |
+          cd $OPENWRT_ROOT_PATH
+          mv ../luci-app-omcproxy ./package/
+          ls ./package/luci-app*
+
+      - name: Compile Packages
+        timeout-minutes: 240
+        run: |
+          cd $OPENWRT_ROOT_PATH
+          make package/luci-app-omcproxy/compile -j$(nproc) IGNORE_ERRORS="y m n" BUILD_LOG=1
 
       - name: Test
         run: |
