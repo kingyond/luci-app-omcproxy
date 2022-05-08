@@ -51,6 +51,9 @@ jobs:
           echo "DEVICE_SUBTARGET=64" >> $GITHUB_ENV
           echo "TARGET_INFO=immortalwrt-immortalwrt-openwrt-18.06-k5.4-x86-64" >> $GITHUB_ENV
 
+      - name: Clone OpenWrt Buildbot
+        run: |
+          git clone https://github.com/SuLingGG/OpenWrt-Buildbot.git
       - name: Prepare Toolchain Image
         run: |
           mkdir -p workspace
@@ -79,7 +82,7 @@ jobs:
           cd $OPENWRT_ROOT_PATH
           echo CONFIG_TARGET_${DEVICE_TARGET}=y > .config
           echo CONFIG_TARGET_${DEVICE_TARGET}_${DEVICE_SUBTARGET}=y >> .config
-          cat $GITHUB_WORKSPACE/config/packages.config >> .config
+          cat $GITHUB_WORKSPACE/OpenWrt-Buildbot/config/packages.config >> .config
           echo -e "\n---- Original Config Start ----\n"
           cat .config
           echo -e "\n---- Original Config End ----\n"
